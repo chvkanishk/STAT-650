@@ -1,0 +1,35 @@
+```{r}
+diabetes <- read.csv("C:/Users/chvka/Downloads/archive (4)/diabetes.csv")
+names(diabetes)
+```
+
+```{r}
+yes<-data.frame(diabetes[diabetes$Outcome==1,])
+no<- data.frame(diabetes[diabetes$Outcome==0,])
+```
+
+```{r}
+head(yes)
+```
+
+```{r}
+plot(yes$Outcome,yes$Glucose )
+```
+
+```{r}
+plot(no$Outcome,no$Glucose)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
