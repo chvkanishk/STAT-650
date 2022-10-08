@@ -1,0 +1,215 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(corrplot)
+library(caret)
+library(corrplot)
+```
+
+
+```{r}
+diabetes <- read.csv("C:/Users/chvka/Downloads/archive (4)/diabetes.csv")
+head(diabetes)
+```
+
+dimentions
+
+```{r}
+dim(diabetes)
+```
+```{r}
+names(diabetes)
+```
+
+
+```{r}
+table(diabetes$Outcome)
+```
+
+
+rename
+
+```{r}
+library(tidyverse)
+d2<-diabetes %>%
+  rename("Glucose_mg/dl" = Glucose,
+         "BloodPressure_mmHg"= BloodPressure,
+         "Insulin_mL"=Insulin,
+         "BMI_W/H"=BMI,
+         "DiabetesPedigreeFunction_%"=DiabetesPedigreeFunction)
+  
+```
+
+
+arrange by age.
+
+
+
+```{r}
+d3 <- d2 %>%
+  arrange(Age)
+head(d3)
+```
+
+Diabetic patients table
+
+```{r}
+yes<-diabetes %>% 
+  filter(Outcome==0)
+head(yes)
+```
+
+
+non diabetic 
+
+```{r}
+no<-diabetes %>% 
+  filter(Outcome==1)
+head(no)
+```
+
+
+mean, standard deviation and count 
+
+```{r}
+table1<- yes %>%
+  group_by(Outcome)%>%
+  summarize(count=length(Outcome),
+            mean_Pregnancies=mean(Pregnancies),
+            SD_Pregnancies=sd(Pregnancies),
+            mean_Glucose= mean(Glucose),
+            SD_Glucose = sd(Glucose),
+            mean_BloodPressure= mean(BloodPressure),
+            SD_BloodPressure= sd(BloodPressure),
+            mean_SkinThickness = mean(SkinThickness),
+            SD_SkinThickness = sd(SkinThickness),
+            mean_Insulin=mean(Insulin),
+            SD_Insulin= sd(Insulin),
+            mean_BMI= mean(BMI),
+            SD_BMI= sd(BMI),
+            mean_DiabetesPedigreeFunction= mean(DiabetesPedigreeFunction),
+            SD_DiabetesPedigreeFunction = sd(DiabetesPedigreeFunction),
+            )
+head(table1)
+```
+
+```{r}
+table2<- no %>%
+  group_by(Outcome)%>%
+  summarize(count=length(Outcome),
+            mean_Pregnancies=mean(Pregnancies),
+            SD_Pregnancies=sd(Pregnancies),
+            mean_Glucose= mean(Glucose),
+            SD_Glucose = sd(Glucose),
+            mean_BloodPressure= mean(BloodPressure),
+            SD_BloodPressure= sd(BloodPressure),
+            mean_SkinThickness = mean(SkinThickness),
+            SD_SkinThickness = sd(SkinThickness),
+            mean_Insulin=mean(Insulin),
+            SD_Insulin= sd(Insulin),
+            mean_BMI= mean(BMI),
+            SD_BMI= sd(BMI),
+            mean_DiabetesPedigreeFunction= mean(DiabetesPedigreeFunction),
+            SD_DiabetesPedigreeFunction = sd(DiabetesPedigreeFunction),
+            )
+
+head(table2)
+```
+
+
+combining both tables 
+
+
+```{r}
+t3 <- full_join(table1,table2)
+tibble(t3)
+head(t3)
+```
+
+
+pLOTS 
+
+```{r}
+ggplot(diabetes,aes(x=Outcome,y=Insulin,color=Outcome))+
+geom_point()
+```
+
+
+
+```{r}
+
+plot2 <- ggplot(data=diabetes,
+aes(x=Outcome,y=Pregnancies,col=Pregnancies))+geom_point()
+plot2
+```
+
+
+
+```{r}
+p <- ggplot(data=diabetes,aes(x=Pregnancies,y=Glucose,color=factor(Outcome)))+
+geom_point()
+plot1 <- p+
+facet_grid(Outcome~.,)+
+theme(plot.background=element_rect(colour="black"))
+plot1
+```
+
+
+Here is a dot plot for the chance of being diabetic when there are more number of pregnancies.
+
+The other plot gives us information about glucose level of the women on y and number of pregnancies on x.
+
+The glucose level is high for women when they are not diabetic.
+
+```{r}
+plot_age <- ggplot(data=diabetes,
+             aes(x=Age,y=Glucose,color=factor(Outcome)))+geom_point()
+plot_age+facet_grid(Outcome~.,)
+```
+
+
+corelation plot
+```{r}
+numeric.var <- sapply(diabetes, is.numeric)
+corr.matrix <- cor(diabetes[,numeric.var])
+corrplot(corr.matrix, main="\n\nCorrelation Plot ", order = "hclust", tl.col = "black", tl.srt=45, tl.cex=0.8, cl.cex=0.8)
+box(which = "outer", lty = "solid")
+```
+
+
+logistic regression
+
+```{r}
+train <- diabetes[1:540,]
+test <- diabetes[541:768,]
+```
+
+
+```{r, include=FALSE}
+lm <- glm(as.factor(Outcome)~.,data=train,family=binomial)
+summary(lm)
+
+```
+
+```{r}
+lm2 <- step(lm)
+summary(lm2)
+AIC(lm,lm2)
+```
+
+
+```{r}
+fitted.results <- predict(lm2,newdata=test,type='response')
+fitted.results <- ifelse(fitted.results > 0.5,1,0)
+(conf_matrix_logi<-table(fitted.results, test$Outcome))
+```
+
+
+
+
